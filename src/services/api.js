@@ -1,4 +1,4 @@
-// src/services/api.js - Updated version
+// src/services/api.js - Resolved version
 import axios from 'axios';
 
 // Environment-aware base URL
@@ -8,7 +8,7 @@ const getBaseUrl = () => {
   
   // Use production URL if in production, otherwise use local dev server
   return isProduction 
-    ? 'https://trueskill-backend.onrender.com' 
+    ? 'https://trueskill-backend.onrender.com/api' // Include /api for consistency
     : '/api'; // This will use the proxy in development
 };
 
