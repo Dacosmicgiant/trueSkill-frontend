@@ -1,18 +1,32 @@
-// src/services/api.js
+// src/services/api.js - Resolved version
 import axios from 'axios';
 
-// Create an Axios instance with default config
+// Environment-aware base URL
+const getBaseUrl = () => {
+  // Check if we're in production mode
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Use production URL if in production, otherwise use local dev server
+  return isProduction 
+    ? 'https://trueskill-backend.onrender.com/api' // Include /api for consistency
+    : '/api'; // This will use the proxy in development
+};
+
+// Create an Axios instance with dynamic config
 const api = axios.create({
-  baseURL: 'https://trueskill-backend.onrender.com/api', // Should match your backend URL
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true, // To handle cookies for JWT
+  timeout: 15000, // 15 seconds timeout
 });
 
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
+    console.log(`Making request to: ${config.baseURL}${config.url}`);
+    
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -26,6 +40,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data, // Return the data directly
   (error) => {
+    console.error('API Error Response:', error);
+    
     // Handle authentication errors
     if (error.response && error.response.status === 401 && !window.location.pathname.includes('/login')) {
       // Clear token and redirect to login
