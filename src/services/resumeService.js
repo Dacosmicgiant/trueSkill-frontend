@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Base URL for the Flask server
-const API_BASE_URL = 'http://localhost:5000'; // Adjust this to your Flask server's host and port
+const API_BASE_URL = 'https://64e5-2401-4900-1c94-38e9-11f2-1f34-2b4f-1c30.ngrok-free.app'; // Adjust this to your Flask server's host and port
 
 // Create an axios instance with default configurations
 const apiClient = axios.create({
