@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Create an Axios instance with default config
 const api = axios.create({
-  baseURL: 'https://trueskill-backend.onrender.com/', // Should match your backend URL
+  baseURL: 'https://trueskill-backend.onrender.com/api', // Should match your backend URL
   headers: {
     'Content-Type': 'application/json',
   },
