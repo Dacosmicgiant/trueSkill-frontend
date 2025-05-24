@@ -1,15 +1,12 @@
-// src/services/api.js - Resolved version
+// src/services/api.js - Fixed version
 import axios from 'axios';
 
 // Environment-aware base URL
 const getBaseUrl = () => {
-  // Check if we're in production mode
   const isProduction = process.env.NODE_ENV === 'production';
-  
-  // Use production URL if in production, otherwise use local dev server
   return isProduction 
-    ? 'https://trueskill-backend.onrender.com/api' // Include /api for consistency
-    : '/api'; // This will use the proxy in development
+    ? 'https://trueskill-backend.onrender.com/api'
+    : '/api';
 };
 
 // Create an Axios instance with dynamic config
@@ -18,8 +15,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // To handle cookies for JWT
-  timeout: 15000, // 15 seconds timeout
+  withCredentials: true, // For HTTP-only cookies
+  timeout: 15000,
 });
 
 // Request interceptor for adding auth token
@@ -28,9 +25,13 @@ api.interceptors.request.use(
     console.log(`Making request to: ${config.baseURL}${config.url}`);
     
     const token = localStorage.getItem('auth_token');
-    if (token) {
+    
+    // Only add Authorization header if we have a valid JWT token
+    // Don't add it if token is just a placeholder string
+    if (token && token !== 'logged_in' && token !== 'authenticated') {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
   (error) => Promise.reject(error)
@@ -38,15 +39,38 @@ api.interceptors.request.use(
 
 // Response interceptor for handling errors
 api.interceptors.response.use(
-  (response) => response.data, // Return the data directly
+  (response) => response.data,
   (error) => {
     console.error('API Error Response:', error);
     
-    // Handle authentication errors
-    if (error.response && error.response.status === 401 && !window.location.pathname.includes('/login')) {
-      // Clear token and redirect to login
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+    // Handle authentication errors more carefully
+    if (error.response && error.response.status === 401) {
+      const currentPath = window.location.pathname;
+      
+      // Don't redirect if already on login/register pages
+      if (currentPath.includes('/login') || currentPath.includes('/register')) {
+        return Promise.reject(error.response?.data || {
+          message: error.message || 'Authentication failed'
+        });
+      }
+      
+      // Only clear auth and redirect for certain endpoints
+      // Don't do it for endpoints that might legitimately return 401
+      const url = error.config?.url || '';
+      const authEndpoints = ['/auth/profile', '/auth/logout'];
+      const isAuthEndpoint = authEndpoints.some(endpoint => url.includes(endpoint));
+      
+      if (isAuthEndpoint) {
+        console.log('Authentication failed, clearing tokens and redirecting');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_status');
+        
+        // Small delay to prevent rapid redirects
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+      }
+      
       return Promise.reject({
         message: 'Authentication required. Please log in.'
       });
@@ -67,7 +91,7 @@ api.interceptors.response.use(
   }
 );
 
-// Helper methods for API calls
+// Helper methods for API calls with better error handling
 export const get = async (url, params = {}) => {
   try {
     return await api.get(url, { params });
