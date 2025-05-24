@@ -25,6 +25,7 @@ import PublicDiscussion from './pages/PublicDiscussion';
 // Candidate Routes
 import CandidateJobMatches from './pages/Candidates/CandidateJobMatches';
 import CandidateAddToJob from './pages/Candidates/CandidateAddToJob';
+import RepoQuestions from './components/qa/QA';
 
 // Context
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -71,6 +72,8 @@ function AppRoutes() {
     <Router>
       <Routes>
         {/* Auth Routes */}
+        
+        <Route path='/QA' element={<RepoQuestions/>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
           <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
